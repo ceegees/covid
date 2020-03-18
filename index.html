@@ -4,41 +4,125 @@
 <head>
   <title>Covid Tracker</title>
   <meta charset="utf-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta name="description" content="Shows route map of infected patients. People can upload their location data from google for contact tracing and proximity" />
   <link type="text/css" rel="stylesheet" href="//unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
   <link type="text/css" rel="stylesheet" href="//www.w3schools.com/w3css/4/w3.css">
-  <link type="text/css" rel="stylesheet" href="/app.css" />
+  <link type="text/css" rel="stylesheet" href="/app.css?r=2" />
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-30327290-15"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-30327290-15');
+  </script>
+
 </head>
 
-<body>
-  <div id="header-bar" class="w3-padding-small w3-indigo w3-row">
+<body class="w3-light-grey">
+  <div id="header-bar" class="w3-indigo w3-row">
     <div class="w3-left">
-      <button class="w3-button  w3-xlarge" onclick="w3_toggle()">☰</button>
+      <button class="w3-button " onclick="sidebarToggle()">☰</button>
     </div>
     <div class="w3-left w3-margin-left">
-      <h4>COVID19 Tracker with Timeline </h4>
+      <h5>COVID19 Tracker with Timeline </h5>
     </div>
   </div>
+  <div class="w3-sidebar w3-light-grey w3-bar-block w3-show w3-padding w3-border-right w3-small w3-hide" id="appSidebar">
+    <p>Assumption is that the bacteria will not be able to survive for more than 3 days time
+      <a target="_blank" href="https://www.who.int/news-room/q-a-detail/q-a-coronaviruses">as per WHO data </a>
+      <blockquote>it is mentioned "a couple of days"</blockquote>
+    </p>
+    <div class="w3-white w3-margin-bottom">
+      <div class="w3-blue w3-padding"><b>Patient Clusters</b></div>
+      <ul class="w3-ul  w3-white" id="block-info-page"></ul>
 
-  <div class="w3-sidebar w3-bar-block w3-padding w3-border-right" style="display:none" id="appSidebar">
-    <p>Assumption is that the contagen will die down in 4 days time</p>
+      <a class="w3-block w3-text-grey w3-padding-small w3-small" 
+        target="_blank"
+      href="https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/edit#gid=0">Data source</a>
+    </div>
+    <div class="w3-white" >
+      <div class="w3-deep-orange w3-padding-small">
+        <b>Check if you were near the zones based on your location history</b></div>
+      <div class="w3-padding">
+        <label for="locationFile"> Select location data exported from google takeout
+          <input type="file" id="locationFile" />
+        </label>
+        <div class="w3-section">
+          <a href="#" onclick="document.getElementById('info-modal').classList.add('w3-show')">How to take out location
+            data</a>
+        </div>
+        <div></div>
+      </div>
+    </div>
 
   </div>
-  <div id="leaflet"></div>
-
-  <div id="id01" class="w3-modal">
-    <div class="w3-modal-content">
-      <div class="w3-container">
-        <span onclick="document.getElementById('id01').style.display='none'"
-          class="w3-button w3-display-topright">&times;</span>
-        <p>Assumption is that the contagen will die down in 4 days time</p>
+  <div class="w3-row app-main">
+    <div id="leaflet" class="w3-col s12"></div>
+    <div class="w3-rest w3-padding w3-small w3-light-grey">
+      <div id="sidebarInfo">
+        <div class="w3-section">
+          <b>{{title}}</b>
+        </div>
+        <info-item v-for="item in itemList" v-bind:item="item" v-bind:key="item.id"></info-item>
       </div>
     </div>
   </div>
 
+  <div id="info-modal" class="w3-modal">
+    <div class="w3-modal-content">
+      <div class="w3-container">
+        <span onclick="document.getElementById('info-modal').classList.remove('w3-show')"
+          class="w3-button w3-display-topright">&times;</span>
+        <div class="w3-padding-32">
+          <div class="w3-section">
+            <h3>How to get your location data</h3>
+          </div>
+          <ul class="w3-ul w3-white w3-left-align w3-border">
+            <li>
+              Visit <a target="_blank" href="https://takeout.google.com/"> https://takeout.google.com/</a>
+            </li>
+            <li>
+              Search for export location history on the page and Click on Multiple Formats
+              <img src="/img/pic_1.png" class="w3-block" />
+            </li>
+
+            <li>
+              Make sure you have selected JSON as the format and click OK
+              <img src="/img/pic_2.png" class="w3-block" />
+            </li>
+            <li>
+              Your location history will be exportable in couple of minutes. You will get an email notifying the same,
+              You will be able to download a zip file
+              by clicking on the following Link
+              <img src="/img/pic_3.png" class="w3-block" />
+            </li>
+            <li>
+              Unzip the Downloaded file and select the "Location Histyory.json" file with the file selection
+              <img src="/img/pic_4.png" class="w3-block" />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="location-check-modal" class="w3-modal">
+    <div class="w3-modal-content">
+      <div class="w3-container">
+        <span onclick="document.getElementById('location-check-modal').classList.remove('w3-show')"
+          class="w3-button w3-display-topright">&times;</span>
+        <div class="w3-padding-32 " id="modal-data">
+
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="timeline" class="w3-padding">
     <div class="w3-center w3-padding-small"><span id="time-show">2020-02-24</span>
-      <span class="w3-tiny w3-text-grey">
+      <span class="w3-tiny w3-text-grey w3-hide-small">
         <b>Slide to change date and time</b>
       </span>
     </div>
@@ -51,12 +135,24 @@
       </div>
     </div>
   </div>
+  <template id="locationBlock">
+    <div class="w3-white w3-padding-small w3-margin-bottom w3-display-container">
+      <b>{{item.locationName}}</b>
+      <div>from: {{item.timeFrom.format('YYYY/MM/DD hh:mm a')}}<br /> to : {{item.timeTo.format('YYYY/MM/DD hh:mm a')}}
+        <br />potential infection time: {{item.hrDiff}} hours ago </div>
+      <span class="w3-display-bottomright w3-padding-small w3-orange w3-label"><b>{{item.cluster}}</b></span>
+    </div>
+  </template>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
   <script type="application/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
   <script type="application/javascript" src="//unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-  <script type="application/javascript" src="/app.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+  <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+  <script type="application/javascript" src="/app.js?r=6"></script>
 </body>
 
 </html>
