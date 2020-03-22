@@ -7,7 +7,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta name="description" content="Shows route map of infected patients. People can upload their location data from google for contact tracing and proximity" />
+  <meta name="description"
+    content="Shows route map of infected patients. People can upload their location data from google for contact tracing and proximity" />
   <link type="text/css" rel="stylesheet" href="//unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
   <link type="text/css" rel="stylesheet" href="//www.w3schools.com/w3css/4/w3.css">
   <link type="text/css" rel="stylesheet" href="/app.css?r=2" />
@@ -19,9 +20,7 @@
     gtag('js', new Date());
     gtag('config', 'UA-30327290-15');
   </script>
-
 </head>
-
 <body class="w3-light-grey">
   <div id="header-bar" class="w3-indigo w3-row">
     <div class="w3-left">
@@ -31,21 +30,40 @@
       <h5>COVID19 Tracker with Timeline </h5>
     </div>
   </div>
-  <div class="w3-sidebar w3-light-grey w3-bar-block w3-show w3-padding w3-border-right w3-small w3-hide" id="appSidebar">
+  <div class="w3-sidebar w3-display-container w3-light-grey w3-bar-block w3-show w3-padding w3-border-right w3-small w3-hide"
+    id="appSidebar">
     <p>Assumption is that the bacteria will not be able to survive for more than 3 days time
       <a target="_blank" href="https://www.who.int/news-room/q-a-detail/q-a-coronaviruses">as per WHO data </a>
       <blockquote>it is mentioned "a couple of days"</blockquote>
     </p>
     <div class="w3-white w3-margin-bottom">
-      <div class="w3-blue w3-padding"><b>Patient Clusters</b></div>
+      <div class="w3-blue w3-padding w3-round"><b>Patient Clusters</b></div>
       <ul class="w3-ul  w3-white" id="block-info-page"></ul>
-
-      <a class="w3-block w3-text-grey w3-padding-small w3-small" 
-        target="_blank"
-      href="https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/edit#gid=0">Data source</a>
+      <a class="w3-block w3-text-grey w3-padding-small w3-small" target="_blank"
+        href="https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/edit#gid=0">Data
+        source</a>
+      
+      <a  class="w3-block  w3-hide w3-text-grey w3-padding-small w3-small" target="_blank"
+       href="https://docs.google.com/spreadsheets/d/1nzXUdaIWC84QipdVGUKTiCSc5xntBbpMpzLm6Si33zk/edit#gid=1532084277">Data Source</a>
     </div>
-    <div class="w3-white" >
-      <div class="w3-deep-orange w3-padding-small">
+
+    <div class="w3-white w3-margin-bottom">
+      <div class="w3-blue w3-padding w3-round" ><b>Information From Collectors</b></div>
+      <ul class="w3-ul  w3-white">
+        <li><a target="_blank"
+            href="https://www.facebook.com/dc.pathanamthitta/photos/a.844278812280384/3681589748549262/?type=3&theater">P1</a>
+        </li>
+        <li><a target="_blank"
+            href="https://www.facebook.com/dc.pathanamthitta/photos/a.844278812280384/3681589878549249/?type=3&theater">P2</a>
+        </li>
+        <li><a target="_blank"
+            href="https://www.facebook.com/CollectorKKD/photos/a.1589925731244201/2591672371069527/?type=3&theater">PKM1</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="w3-white">
+      <div class="w3-deep-orange w3-round w3-padding-small">
         <b>Check if you were near the zones based on your location history</b></div>
       <div class="w3-padding">
         <label for="locationFile"> Select location data exported from google takeout
@@ -57,6 +75,12 @@
         </div>
         <div></div>
       </div>
+    </div>
+
+
+    <div class="w3-right-align w3-section">
+      <a class="w3-block w3-text-grey"  target="_blank" href="https://github.com/ceegees/covid">Github</a>
+      <a class="w3-block w3-text-grey"  href="mailto:covid@ceegees.in">Contact</a>
     </div>
 
   </div>
@@ -71,7 +95,6 @@
       </div>
     </div>
   </div>
-
   <div id="info-modal" class="w3-modal">
     <div class="w3-modal-content">
       <div class="w3-container">
@@ -114,7 +137,7 @@
       <div class="w3-container">
         <span onclick="document.getElementById('location-check-modal').classList.remove('w3-show')"
           class="w3-button w3-display-topright">&times;</span>
-        <div class="w3-padding-32 " id="modal-data">
+          <div class="w3-padding-32 " id="modal-data">
 
         </div>
       </div>
@@ -131,7 +154,7 @@
         <input type="range" id="timeline-slide" min="" max="" step="3600" style="width:100%" />
       </div>
       <div class="w3-col m1 s3">
-        <button class="w3-button w3-blue w3-round w3-small w3-border-blue" id="playButton">Play</button>
+        <button class="w3-button w3-blue w3-round w3-small w3-border-blue" id="playButton">View Timeline</button>
       </div>
     </div>
   </div>
@@ -148,9 +171,7 @@
   <script type="application/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
   <script type="application/javascript" src="//unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-
   <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
   <script type="application/javascript" src="/app.js?r=6"></script>
 </body>

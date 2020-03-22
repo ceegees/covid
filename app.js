@@ -83,7 +83,7 @@ function handlePlay() {
     const leafCls = document.getElementById("leaflet").classList
     if (gPlayTimer) {
         clearInterval(gPlayTimer);
-        $("#playButton").html('Play');
+        $("#playButton").html('View Timeline');
         gPlayTimer = null;
         return;
     }
@@ -192,7 +192,7 @@ function checkForLocation(locationList){
 
     const msgList = [];
     if (zoneList.length == 0) {
-        msgList.push('<div class="w3-padding-64">Based on the location data we have released by district collectors of Kerala Govt,<br/> You were not near any of the infection zones at the specified time.</div>');
+        msgList.push('<div class="w3-padding-64">Based on the location data released by district collectors of Kerala.<br/> You were not near any of the infection zones at the specified time.</div>');
     } else {
         zoneList.forEach(function(item) {
             msgList.push(
@@ -224,16 +224,19 @@ function handleLocationFile(evt) {
         document.getElementById('location-check-modal').classList.add('w3-show');
        const data =  JSON.parse(e.target.result); 
        if (!data || !data.locations){
-           alert('Unable to process the File,please make sure you are uplaoding correct file ')
-           return;
+            gtag('histroy_check','error');
+            alert('Unable to process the File,please make sure you are uplaoding correct file ')
+            return;
        }
+       gtag('histroy_check','success');
        checkForLocation(data.locations);
-    } 
+    }
     reader.readAsText(file,'UTF-8');
 } 
 
-function loadData(resp) {
-    const clusters = [];
+const gClusters = [];
+
+function loadFromCSV(resp) {
     gDataList = d3.csvParse(resp).filter(function (item, idx) {
         if (!item.locationLat || isNaN(item.locationLat) || isNaN(item.locationLon)) {
             console.log('Invalid Lat Lon at : ', idx);
@@ -253,8 +256,9 @@ function loadData(resp) {
         item.marker = L.marker(latlng,{
             icon: redIcon
         });
-        if (clusters.indexOf(item.cluster) == -1) {
-            clusters.push(item.cluster);
+
+        if (gClusters.indexOf(item.cluster) == -1) {
+            gClusters.push(item.cluster);
         }
         item.timeFrom = moment(item.timeFrom + ":00", "DD/MM/YYYY HH:mm:SS");
         item.timeTo = moment(item.timeTo + ":00", "DD/MM/YYYY HH:mm:SS");
@@ -262,9 +266,18 @@ function loadData(resp) {
         item.utcTo = item.timeTo.toDate().getTime() + safeZoneDuration * 3600*1000;
         return item;
     });
+}
 
+// function loadFromJSON(resp){
+//     resp.travel_history.map(function(item) {
+
+//     })
+// }
+
+function loadData(resp) {
+    loadFromCSV(resp);
     console.log(gDataList);
-    const strList = clusters.map(function(item) {
+    const strList = gClusters.map(function(item) {
         return '<li><a class="w3-block" href="/r/'+item+'">'+item+'</a></li>';
     });
     strList.push('<li><a class="w3-block" href="/">All</a></li> ');
@@ -292,7 +305,8 @@ $(document).ready(function () {
     });
     $("#locationFile").on('change', handleLocationFile);
     $("#playButton").on('click', handlePlay);
-
+    // $.get('https://api.covid19india.org/travel_history.json').done(loaddata);
+    
     // https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=1546417465
     $.get('https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=0')
         .done(loadData)
