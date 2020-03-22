@@ -20,11 +20,19 @@ const greenIcon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png'
 });
 
-let path =  document.location.pathname
+let path = document.location.pathname
 let gPatient = "";
-if (path.indexOf("/r/") >= 0){
-    gPatient =  path.replace("/r/","");
+let routePrefix = '/r/';
+if (path != '/') {
+    const parts = path.split('/');
+    routePrefix = "/" + parts[1] + '/';
+
+    console.log(path, parts, routePrefix);
 }
+if (path.indexOf(routePrefix) >= 0) {
+    gPatient = path.replace(routePrefix, "");
+}
+
 
 let gDataList = [];
 let patientFilter = "";
@@ -50,7 +58,7 @@ function renderPoints() {
         }
 
         total++;
-        const opacity = ((safeZoneDuration - diffe)*2 / (safeZoneDuration)).toFixed(4);
+        const opacity = ((safeZoneDuration - diffe) * 2 / (safeZoneDuration)).toFixed(4);
         const m = item.marker.addTo(map).setOpacity(opacity);
         const diff = diffe > 0 ? diffe : diffb;
         m.bindPopup("<b>" + item.locationName + ",  Potential infection " + diff + " hours ago </b>" +
@@ -92,7 +100,7 @@ function handlePlay() {
         leafCls.remove('s12');
         leafCls.add('s6');
         leafCls.add('m9');
-        
+
     }
     $("#playButton").html('Stop');
     gPlayTimer = setInterval(function () {
@@ -116,21 +124,21 @@ function handlePlay() {
 function toRad(val) {
     return val * Math.PI / 180;
 }
- 
+
 
 function distance(lat1, lon1, lat2, lon2) {
- 
+
     var R = 6371000; // km  
-    var x1 = lat2-lat1;
-    var dLat = toRad(x1);  
-    var x2 = lon2-lon1;
-    var dLon = toRad(x2);  
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
-                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-                    Math.sin(dLon/2) * Math.sin(dLon/2);  
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    return R * c;  
-   
+    var x1 = lat2 - lat1;
+    var dLat = toRad(x1);
+    var x2 = lon2 - lon1;
+    var dLon = toRad(x2);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+
 }
 
 
@@ -148,45 +156,45 @@ var vueApp = new Vue({
     }
 });
 
-function checkForLocation(locationList){ 
+function checkForLocation(locationList) {
     const uLocLen = locationList.length;
     const gIdx = 0;
-    const gLen = gDataList.length; 
+    const gLen = gDataList.length;
     const zoneList = [];
 
-    for(var uIdx = 0;uIdx < uLocLen && gIdx < gLen;uIdx++) {
+    for (var uIdx = 0; uIdx < uLocLen && gIdx < gLen; uIdx++) {
         const uLoc = locationList[uIdx];
-        const lat1 = uLoc.latitudeE7/10000000;
-        const lon1 = uLoc.longitudeE7/10000000;
-        const first = gDataList[0]; 
+        const lat1 = uLoc.latitudeE7 / 10000000;
+        const lon1 = uLoc.longitudeE7 / 10000000;
+        const first = gDataList[0];
         if (first.utcFrom > uLoc.timestampMs) {
             continue;
         }
 
-        for (var idx = 0;idx < gDataList.length;idx++) {
+        for (var idx = 0; idx < gDataList.length; idx++) {
             // we will optimize it later ;)
             const zone = gDataList[idx];
-            if ( uLoc.timestampMs > zone.utcFrom  &&  uLoc.timestampMs  < zone.utcTo ) {
-                
-                const d = distance(lat1,lon1,zone.locationLat,zone.locationLon);
+            if (uLoc.timestampMs > zone.utcFrom && uLoc.timestampMs < zone.utcTo) {
+
+                const d = distance(lat1, lon1, zone.locationLat, zone.locationLon);
                 // console.log(uLoc,d)
                 if (d < 100) {
-                    const item = zoneList.find(function(item) {
+                    const item = zoneList.find(function (item) {
                         return item.zone === zone;
                     });
                     if (!item) {
                         zoneList.push({
-                            zone :zone ,
-                            loc : uLoc
+                            zone: zone,
+                            loc: uLoc
                         });
                     }
                 }
             }
         }
 
-        if (uIdx % 100 == 0) { 
-            $("#modal-data").html('<div class="w3-padding-small">Processed  '+uIdx + ' of '
-            + uLocLen+' values</div>'); 
+        if (uIdx % 100 == 0) {
+            $("#modal-data").html('<div class="w3-padding-small">Processed  ' + uIdx + ' of '
+                + uLocLen + ' values</div>');
         }
     }
 
@@ -194,19 +202,19 @@ function checkForLocation(locationList){
     if (zoneList.length == 0) {
         msgList.push('<div class="w3-padding-64">Based on the location data released by district collectors of Kerala.<br/> You were not near any of the infection zones at the specified time.</div>');
     } else {
-        zoneList.forEach(function(item) {
+        zoneList.forEach(function (item) {
             msgList.push(
-                '<div class="w3-border-bottom w3-small w3-leftbar w3-border-blue w3-padding w3-section">You were near ' + item.zone.locationName 
+                '<div class="w3-border-bottom w3-small w3-leftbar w3-border-blue w3-padding w3-section">You were near ' + item.zone.locationName
                 + ' During '
-                + moment(item.zone.utcFrom).format('YYYY/MM/DD hh:mm a') 
-                + ' to ' 
-                + moment(item.zone.utcTo).format('YYYY/MM/DD hh:mm a') 
+                + moment(item.zone.utcFrom).format('YYYY/MM/DD hh:mm a')
+                + ' to '
+                + moment(item.zone.utcTo).format('YYYY/MM/DD hh:mm a')
                 + ' which is a potential infection zone </div>'
             );
         });
         msgList.push('Please report on Disha ');
     }
-    $("#modal-data").html('<div><b>Processing Completed for '+uLocLen +' values</b></div>' + msgList.join('') ); 
+    $("#modal-data").html('<div><b>Processing Completed for ' + uLocLen + ' values</b></div>' + msgList.join(''));
 }
 
 
@@ -220,19 +228,19 @@ function handleLocationFile(evt) {
         return
     }
     const reader = new FileReader();
-    reader.onload = function(e) { 
+    reader.onload = function (e) {
         document.getElementById('location-check-modal').classList.add('w3-show');
-       const data =  JSON.parse(e.target.result); 
-       if (!data || !data.locations){
-            gtag('histroy_check','error');
+        const data = JSON.parse(e.target.result);
+        if (!data || !data.locations) {
+            gtag('histroy_check', 'error');
             alert('Unable to process the File,please make sure you are uplaoding correct file ')
             return;
-       }
-       gtag('histroy_check','success');
-       checkForLocation(data.locations);
+        }
+        gtag('histroy_check', 'success');
+        checkForLocation(data.locations);
     }
-    reader.readAsText(file,'UTF-8');
-} 
+    reader.readAsText(file, 'UTF-8');
+}
 
 const gClusters = [];
 
@@ -253,7 +261,7 @@ function loadFromCSV(resp) {
         const lat = parseFloat(item.locationLat);
         const lon = parseFloat(item.locationLon)
         var latlng = L.latLng(lat, lon);
-        item.marker = L.marker(latlng,{
+        item.marker = L.marker(latlng, {
             icon: redIcon
         });
 
@@ -263,28 +271,72 @@ function loadFromCSV(resp) {
         item.timeFrom = moment(item.timeFrom + ":00", "DD/MM/YYYY HH:mm:SS");
         item.timeTo = moment(item.timeTo + ":00", "DD/MM/YYYY HH:mm:SS");
         item.utcFrom = item.timeFrom.toDate().getTime();
-        item.utcTo = item.timeTo.toDate().getTime() + safeZoneDuration * 3600*1000;
+        item.utcTo = item.timeTo.toDate().getTime() + safeZoneDuration * 3600 * 1000;
         return item;
     });
 }
 
-// function loadFromJSON(resp){
-//     resp.travel_history.map(function(item) {
-
-//     })
-// }
+function loadFromJSON(resp) {
+    gDataList = resp.travel_history.filter(function (item, idx) {
+        var vals = item.latlong.split(',');
+        if (vals.length < 2) {
+            return false;
+        }
+        const lat = vals[0];
+        const lon = vals[1];
+        if (!lat || isNaN(lat) || isNaN(lon)) {
+            console.log('Invalid Lat Lon at : ', idx);
+            return false;
+        }
+        const mo1 = moment(item.timefrom, "DD/MM/YYYY HH:mm:ss");
+        const mo2 = moment(item.timeto, "DD/MM/YYYY HH:mm:ss");
+        if (!mo1.isValid() || !mo2.isValid()) {
+            console.log("Invalid time at : ", idx);
+            return false;
+        }
+        return true;
+    }).map(function (item) {
+        var vals = item.latlong.split(',');
+        const lat = parseFloat(vals[0]);
+        const lon = parseFloat(vals[1]);
+        var latlng = L.latLng(lat, lon);
+        if (gClusters.indexOf(item.pid) == -1) {
+            gClusters.push(item.pid);
+        }
+        const timeFrom = moment(item.timefrom, "DD/MM/YYYY HH:mm:SS");
+        const timeTo = moment(item.timeto, "DD/MM/YYYY HH:mm:SS");
+        return {
+            marker: L.marker(latlng, {
+                icon: redIcon
+            }),
+            locationLat: lat,
+            loationLon: lon,
+            cluster: item.pid,
+            timeFrom: timeFrom,
+            timeTo: timeTo,
+            locationName:item.address,
+            utcFrom: timeFrom.toDate().getTime(),
+            utcTo: timeTo.toDate().getTime() + safeZoneDuration * 3600 * 1000
+        };
+    });
+}
 
 function loadData(resp) {
-    loadFromCSV(resp);
+
+    if (typeof(resp) == 'string') {
+        loadFromCSV(resp);
+    } else {
+        loadFromJSON(resp);
+    }
     console.log(gDataList);
-    const strList = gClusters.map(function(item) {
-        return '<li><a class="w3-block" href="/r/'+item+'">'+item+'</a></li>';
+    const strList = gClusters.map(function (item) {
+        return '<li><a class="w3-block" href="' + routePrefix + item + '">' + item + '</a></li>';
     });
     strList.push('<li><a class="w3-block" href="/">All</a></li> ');
     $("#block-info-page").html(strList.join(''));
 
-    if (gPatient != '' && gDataList.length > 0 ){
-        const item = gDataList.find(function(item) {
+    if (gPatient != '' && gDataList.length > 0) {
+        const item = gDataList.find(function (item) {
             return item.cluster == gPatient
         });
         if (item) {
@@ -305,9 +357,11 @@ $(document).ready(function () {
     });
     $("#locationFile").on('change', handleLocationFile);
     $("#playButton").on('click', handlePlay);
-    // $.get('https://api.covid19india.org/travel_history.json').done(loaddata);
-    
-    // https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=1546417465
-    $.get('https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=0')
-        .done(loadData)
+    if (routePrefix == '/j/') {
+        $.get('https://api.covid19india.org/travel_history.json').done(loadData);
+    } else {
+        // https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=1546417465
+        $.get('https://docs.google.com/spreadsheets/d/1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw/export?format=csv&id=1MrNksozFNPM9V3OkOEtrN7UzdlVNriRhIdJK5w2zfhw&gid=0')
+            .done(loadData)
+    }
 });
